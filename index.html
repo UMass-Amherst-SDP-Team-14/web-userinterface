@@ -1,7 +1,9 @@
 <html>
   <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Gotcha!</title>
-    <link rel="shortcut icon" type="image/png" href="res/favicon.png"/>
+    <link rel="shortcut icon" type="image/png" href="res/favicon.png" />
     <script src="leaflet/leaflet.js"></script>
     <link href="leaflet/leaflet.css" rel="stylesheet" />
     <style>
@@ -46,7 +48,7 @@
 
     var mymap = L.map("mymap", {
       minZoom: 9,
-      maxZoom: 15,
+      maxZoom: 16,
     });
 
     mymap.setView([42.39379, -72.528574], 14);
@@ -63,22 +65,57 @@
     };
     L.tileLayer.Custom().addTo(mymap);
 
-    // print markers
-    var request = new XMLHttpRequest();
-    request.open("GET", "data.json", false);
-    request.send(null);
-    var markerDB = JSON.parse(request.responseText);
+    var nodeMarkers = L.layerGroup().addTo(mymap);
 
-    for (var i = 0; i < markerDB["workerNodes"].length; i++) {
-        var newMarker = L.marker(markerDB["workerNodes"][i], { icon: workerIcon })
-        newMarker.addTo(mymap);
-        newMarker.bindPopup("<h3>Client Seeking Rescue</h3><span><strong>Lat</strong> " + markerDB["workerNodes"][i][0] + "<br><strong>Lon</strong> " + markerDB["workerNodes"][i][1]);
+    function updateMarkers() {
+      nodeMarkers.clearLayers();
+
+      // print markers
+      var request = new XMLHttpRequest();
+      request.open("GET", "data.json", false);
+      request.send(null);
+      var markerDB = JSON.parse(request.responseText);
+
+      // worker nodes
+      for (var i = 0; i < markerDB["worker_id"].length; i++) {
+        var newMarker = L.marker(
+          [markerDB["worker_lat"][i], markerDB["worker_lon"][i]],
+          { icon: workerIcon }
+        );
+        newMarker.addTo(nodeMarkers);
+        newMarker.bindPopup(
+          "<h3>Person Seeking Rescue</h3><span><strong>ID</strong> " +
+            markerDB["worker_id"][i] +
+            "<br><strong>Lat</strong> " +
+            markerDB["worker_lat"][i] +
+            "<br><strong>Lon</strong> " +
+            markerDB["worker_lon"][i]
+        );
+      }
+
+      // base nodes
+      for (var i = 0; i < markerDB["base_id"].length; i++) {
+        var newMarker = L.marker(
+          [markerDB["base_lat"][i], markerDB["base_lon"][i]],
+          { icon: baseIcon }
+        );
+        newMarker.addTo(nodeMarkers);
+        newMarker.bindPopup(
+          "<h3>Base Station</h3><span><strong>ID</strong> " +
+            markerDB["base_id"][i] +
+            "<br><strong>Lat</strong> " +
+            markerDB["base_lat"][i] +
+            "<br><strong>Lon</strong> " +
+            markerDB["base_lon"][i]
+        );
+      }
     }
 
-    for (var i = 0; i < markerDB["baseNodes"].length; i++) {
-        var newMarker = L.marker(markerDB["baseNodes"][i], { icon: baseIcon })
-        newMarker.addTo(mymap);
-        newMarker.bindPopup("<h3>First Responder Base Station</h3><span><strong>Lat</strong> " + markerDB["baseNodes"][i][0] + "<br><strong>Lon</strong> " + markerDB["baseNodes"][i][1]);
-    }
+    updateMarkers();
+
+    // update markers every 10 seconds
+    setInterval(function () {
+      updateMarkers();
+    }, 10000);
   </script>
 </html>
