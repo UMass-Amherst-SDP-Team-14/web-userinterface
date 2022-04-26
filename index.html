@@ -1,33 +1,78 @@
 <html>
-  <head> </head>
+  <head>
+    <script src="leaflet/leaflet.js"></script>
+    <link href="leaflet/leaflet.css" rel="stylesheet" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      #mymap {
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
 
   <body>
-      <div id="osm-map"></div>
+    <div id="mymap"></div>
   </body>
 
   <script>
-    // Where you want to render the map.
-    var element = document.getElementById("osm-map");
+    var LeafIcon = L.Icon.extend({
+      options: {
+        iconSize: [35, 55],
+        shadowSize: [0, 0],
+        iconAnchor: [17, 55],
+        shadowAnchor: [0, 0],
+        popupAnchor: [-3, -76],
+      }
+    });
 
-    // Height has to be set. You can do this in CSS too.
-    element.style = "height:300px;";
+    var baseIcon = new LeafIcon({
+      iconUrl: "res/baseIcon.png"
+    });
 
-    // Create Leaflet map on map element.
-    var map = L.map(element);
+    var workerIcon = new LeafIcon({
+      iconUrl: "res/workerIcon.png"
+    });
 
-    // Add OSM tile layer to the Leaflet map.
-    L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-    }).addTo(map);
+    var mymap = L.map("mymap", {
+      minZoom: 9,
+      maxZoom: 15,
+    });
+
+    mymap.setView([42.393790, -72.528574], 14);
+
+    L.TileLayer.Custom = L.TileLayer.extend({
+      getTileUrl: function (coords) {
+        url = "./tiles/" + coords.z + "/" + coords.x + "/" + coords.y + ".png";
+        return url;
+      },
+    });
+
+    L.tileLayer.Custom = function () {
+      return new L.TileLayer.Custom();
+    };
+    L.tileLayer.Custom().addTo(mymap);
 
     // Target's GPS coordinates.
-    var target = L.latLng("47.50737", "19.04611");
-
-    // Set map's center to target with zoom 14.
-    map.setView(target, 14);
+    var target = L.latLng("42.393790", "-72.528574");
 
     // Place a marker on the same location.
-    L.marker(target).addTo(map);
+    L.marker([42.393790, -72.528574], {icon: baseIcon}).addTo(mymap);
+
+    L.marker([42.383790, -72.518574], {icon: workerIcon}).addTo(mymap);
   </script>
+
+  <style>
+    body {
+      margin: 0;
+    }
+  </style>
 </html>
